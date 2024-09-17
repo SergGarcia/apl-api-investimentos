@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Delete, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ProdutoInvestimentoService } from './investimentos.service';
 import { ProdutoInvestimentoDto } from './dto/investimento-response.dto';
 import { CadastroInvestimentoDto } from './dto/cadastro-investimento.dto';
@@ -17,13 +17,21 @@ export class ProdutoInvestimentoController {
   }
 
   @Get('investimentos/:clienteId')
-  getInvestimentos(@Param('clienteId') clienteId: number): (ProdutoInvestimentoDto & { dadosContratacao: CadastroInvestimentoDto })[] {
+  getInvestimentos(@Param('clienteId') clienteId: string): (ProdutoInvestimentoDto & { dadosContratacao: CadastroInvestimentoDto })[] {
     return this.produtoInvestimentoService.getInvestimentosPorCliente(clienteId);
   }
 
   @Post('investimentos')
-  cadastrarInvestimento(@Body() dto: CadastroInvestimentoDto): CadastroInvestimentoDto {
+  cadastrarInvestimento(@Body() dto: CadastroInvestimentoDto): Promise<CadastroInvestimentoDto> {
     const { clienteId, produtoId, valorAplicado, cpf, cnpj } = dto;
     return this.produtoInvestimentoService.cadastrarInvestimento(clienteId, produtoId, valorAplicado, cpf, cnpj);
+  }
+
+  @Delete(':clienteId/produto/:produtoId')
+  async deleteInvestimento(
+    @Param('clienteId') clienteId: string,
+    @Param('produtoId') produtoId: number,
+  ) {
+    return this.produtoInvestimentoService.deleteInvestimento(clienteId, produtoId);
   }
 }

@@ -9,14 +9,14 @@ import { ClienteTipo } from '../shared/cliente-tipo.enum';
 export class ProdutoInvestimentoService {
   constructor(private readonly clienteService: ClienteService) {}
 
-  private readonly produtos: ProdutoInvestimentoDto[] = [
+  private produtos: ProdutoInvestimentoDto[] = [
     { id: 1, nome: 'Produto A', descricao: 'Descrição do Produto A', valorMinimo: 1000, tipoCliente: ClienteTipo.PF, taxaRetorno: 5, dataVencimento: new Date('2025-12-31') },
     { id: 2, nome: 'Produto B', descricao: 'Descrição do Produto B', valorMinimo: 2000, tipoCliente: ClienteTipo.PJ, taxaRetorno: 6, dataVencimento: new Date('2026-01-15') },
     { id: 3, nome: 'Produto C', descricao: 'Descrição do Produto C', valorMinimo: 1500, tipoCliente: ClienteTipo.AMBOS, taxaRetorno: 4.5, dataVencimento: new Date('2024-11-30') },
     { id: 4, nome: 'Produto D', descricao: 'Descrição do Produto D', valorMinimo: 2500, tipoCliente: ClienteTipo.AMBOS, taxaRetorno: 5.8, dataVencimento: new Date('2025-10-01') },
   ];
 
-  private readonly clienteInvestimentos: { [key: string]: CadastroInvestimentoDto[] } = {
+  private clienteInvestimentos: { [key: string]: CadastroInvestimentoDto[] } = {
     "1c0e9d9b-6762-41b8-96ce-11cdb87357bf": [
       { 
         clienteId: "1c0e9d9b-6762-41b8-96ce-11cdb87357bf",  
@@ -83,18 +83,18 @@ export class ProdutoInvestimentoService {
       });
   }
 
-  cadastrarInvestimento(clienteId: string, produtoId: number, valorAplicado: number, cpf?: string, cnpj?: string) {
+  async cadastrarInvestimento(clienteId: string, produtoId: number, valorAplicado: number, cpf?: string, cnpj?: string) {
     let clientePF: ClientePF | undefined;
     let clientePJ: ClientePJ | undefined;
 
     // Verifica se o cliente é PF ou PJ com base no CPF ou CNPJ
     if (cpf) {
-      clientePF = this.clienteService.findOnePF(clienteId);
+      clientePF =  await this.clienteService.findOnePF(clienteId);
       if (!clientePF) {
         throw new NotFoundException(`Cliente PF com id ${clienteId} não encontrado.`);
       }
     } else if (cnpj) {
-      clientePJ = this.clienteService.findOnePJ(clienteId);
+      clientePJ = await this.clienteService.findOnePJ(clienteId);
       if (!clientePJ) {
         throw new NotFoundException(`Cliente PJ com id ${clienteId} não encontrado.`);
       }
@@ -107,11 +107,13 @@ export class ProdutoInvestimentoService {
     }
 
     // Verifica se o produto é compatível com o tipo de cliente
-    if (produto.tipoCliente === ClienteTipo.PF && !clientePF) {
-      throw new BadRequestException(`Produto ${produtoId} disponível apenas para clientes PF.`);
-    }
-    if (produto.tipoCliente === ClienteTipo.PJ && !clientePJ) {
-      throw new BadRequestException(`Produto ${produtoId} disponível apenas para clientes PJ.`);
+    if(produto.tipoCliente !== ClienteTipo.AMBOS) {
+        if (clientePF && produto.tipoCliente !== ClienteTipo.PF) {
+            throw new BadRequestException(`Produto ${produtoId} disponível apenas para clientes PF.`);
+          }
+          if (clientePJ && produto.tipoCliente !== ClienteTipo.PJ) {
+            throw new BadRequestException(`Produto ${produtoId} disponível apenas para clientes PJ.`);
+          }
     }
 
     // Validação de regra para PF
@@ -153,5 +155,28 @@ export class ProdutoInvestimentoService {
     
     this.clienteInvestimentos[clienteId].push(novoInvestimento);
     return novoInvestimento;
+  }
+
+  // Método para remover um investimento
+  deleteInvestimento(clienteId: string, produtoId: number) {
+    // Verifica se o cliente existe
+    const clienteInvestimentos = this.clienteInvestimentos[clienteId];
+    if (!clienteInvestimentos) {
+      throw new NotFoundException(`Nenhum investimento encontrado para o cliente com id ${clienteId}.`);
+    }
+
+    // Verifica se o investimento a ser removido existe
+    const investimentoIndex = clienteInvestimentos.findIndex(inv => inv.produtoId == produtoId);
+    if (investimentoIndex === -1) {
+      throw new NotFoundException(`Investimento com produto id ${produtoId} não encontrado para o cliente com id ${clienteId}.`);
+    }
+
+    // Remove o investimento
+    clienteInvestimentos.splice(investimentoIndex, 1);
+
+    // Se não houver mais investimentos para o cliente, remove a entrada do clienteInvestimentos
+    if (clienteInvestimentos.length === 0) {
+      delete this.clienteInvestimentos[clienteId];
+    }
   }
 }
