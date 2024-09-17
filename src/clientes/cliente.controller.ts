@@ -1,66 +1,67 @@
-// cliente.controller.ts
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Query } from '@nestjs/common';
 import { ClienteService } from './cliente.service';
 import { CreateClientePFDto } from './dto/create-cliente-pf.dto';
-import { CreateClientePJDto } from './dto/create-cliente-pj.dto';
 import { UpdateClientePFDto } from './dto/update-cliente-pf.dto';
+import { CreateClientePJDto } from './dto/create-cliente-pj.dto';
 import { UpdateClientePJDto } from './dto/update-cliente-pj.dto';
+import { ClientePF } from './entities/cliente-pf.entity';
+import { ClientePJ } from './entities/cliente-pj.entity';
 
 @Controller('clientes')
 export class ClienteController {
   constructor(private readonly clienteService: ClienteService) {}
 
-  // Endpoints para Cliente PF
+  // Cliente PF
 
   @Post('pf')
-  createPF(@Body() dto: CreateClientePFDto) {
-    return this.clienteService.createPF(dto);
+  createPF(@Body() createClientePFDto: CreateClientePFDto): ClientePF {
+    return this.clienteService.createPF(createClientePFDto);
   }
 
   @Get('pf')
-  findAllPF() {
+  findAllPF(): ClientePF[] {
     return this.clienteService.findAllPF();
   }
 
   @Get('pf/:id')
-  findOnePF(@Param('id') id: number) {
+  findOnePF(@Param('id') id: string): ClientePF {
     return this.clienteService.findOnePF(id);
   }
 
   @Put('pf/:id')
-  updatePF(@Param('id') id: number, @Body() dto: UpdateClientePFDto) {
-    return this.clienteService.updatePF(id, dto);
+  updatePF(@Param('id') id: string, @Body() updateClientePFDto: UpdateClientePFDto): ClientePF {
+    return this.clienteService.updatePF(id, updateClientePFDto);
   }
 
   @Delete('pf/:id')
-  removePF(@Param('id') id: number) {
+  removePF(@Param('id') id: string): void {
     return this.clienteService.removePF(id);
   }
 
-  // Endpoints para Cliente PJ
+  // Cliente PJ
 
   @Post('pj')
-  createPJ(@Body() dto: CreateClientePJDto) {
-    return this.clienteService.createPJ(dto);
+  createPJ(@Body() createClientePJDto: CreateClientePJDto): ClientePJ {
+    return this.clienteService.createPJ(createClientePJDto);
   }
 
   @Get('pj')
-  findAllPJ() {
+  findAllPJ(): ClientePJ[] {
     return this.clienteService.findAllPJ();
   }
 
   @Get('pj/:id')
-  findOnePJ(@Param('id') id: number) {
+  findOnePJ(@Param('id') id: string): ClientePJ {
     return this.clienteService.findOnePJ(id);
   }
 
   @Put('pj/:id')
-  updatePJ(@Param('id') id: number, @Body() dto: UpdateClientePJDto) {
-    return this.clienteService.updatePJ(id, dto);
+  updatePJ(@Param('id') id: string, @Body() updateClientePJDto: UpdateClientePJDto): ClientePJ {
+    return this.clienteService.updatePJ(id, updateClientePJDto);
   }
 
   @Delete('pj/:id')
-  removePJ(@Param('id') id: number) {
+  removePJ(@Param('id') id: string): void {
     return this.clienteService.removePJ(id);
   }
 }
